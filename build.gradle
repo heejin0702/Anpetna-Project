@@ -1,0 +1,97 @@
+buildscript {
+    ext {
+        queryDslVersion = "5.0.0"
+    }
+}
+
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.8'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com'
+version = '1.2.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+ext {
+    queryDslVersion = "5.0.0"
+    awsSdkVersion = "2.25.60"
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    //developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.modelmapper:modelmapper:3.1.0'
+    compileOnly 'org.jetbrains:annotations:24.1.0'// JetBrains @NotNull 등 컴파일 전용 어노테이션
+
+
+    // ---lombok---
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+
+    // ---security---
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'	// jwt - security
+    runtimeOnly  'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly  'io.jsonwebtoken:jjwt-jackson:0.11.5'	// JSON 직렬화
+
+
+    // ---data  처리---
+    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation "com.querydsl:querydsl-jpa:${queryDslVersion}:jakarta"
+
+    annotationProcessor(
+            "jakarta.persistence:jakarta.persistence-api",
+            "jakarta.annotation:jakarta.annotation-api",
+            "com.querydsl:querydsl-apt:${queryDslVersion}:jakarta"
+    )
+
+    // --- AWS SDK v2 (S3) ---
+    implementation platform("software.amazon.awssdk:bom:${awsSdkVersion}")
+    implementation "software.amazon.awssdk:s3"
+    implementation "software.amazon.awssdk:auth"
+    implementation "software.amazon.awssdk:regions"
+    implementation "software.amazon.awssdk:url-connection-client" // UrlConnectionHttpClient
+
+    // ---배포 / 운영---
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'    //Actuator : 애플리케이션 상태와 운영 정보를 확인할 수 있는 엔드포인트 제공
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    systemProperty 'spring.profiles.active', 'test'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = [
+                    "$projectDir/src/main/java",
+                    "$buildDir/generated/sources/annotationProcessor/java/main"
+            ]
+        }
+    }
+}
